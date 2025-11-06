@@ -6,6 +6,7 @@ from app.models.responses import (
     SearchResult,
     SearchResponse,
     SourceInfo,
+    SourcesResponse,
     StatsResponse,
 )
 
@@ -15,5 +16,6 @@ __all__ = [
     "SearchResult",
     "SearchResponse",
     "SourceInfo",
+    "SourcesResponse",
     "StatsResponse",
 ]

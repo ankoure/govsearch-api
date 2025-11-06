@@ -6,16 +6,17 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.api.deps import get_opensearch_client
 from app.core.config import settings
+from app.models.responses import StatsResponse, BucketInfo, SourceInfo, SourcesResponse
 from opensearchpy import OpenSearch
 
 router = APIRouter(tags=["Aggregations"])
 
 
-@router.get("/sources")
+@router.get("/sources", response_model=SourcesResponse)
 def get_sources(
     limit: int = Query(50, ge=1, le=500),
     client: OpenSearch = Depends(get_opensearch_client),
-) -> Dict[str, Any]:
+) -> SourcesResponse:
     """
     Get list of available sources with document counts.
     """
@@ -31,16 +32,16 @@ def get_sources(
     if "aggregations" in results and "sources" in results["aggregations"]:
         for bucket in results["aggregations"]["sources"]["buckets"]:
             sources.append(
-                {"source_name": bucket["key"], "doc_count": bucket["doc_count"]}
+                SourceInfo(source_name=bucket["key"], doc_count=bucket["doc_count"])
             )
 
-    return {"sources": sources, "total": len(sources)}
+    return SourcesResponse(sources=sources, total=len(sources))
 
 
-@router.get("/stats")
+@router.get("/stats", response_model=StatsResponse)
 def get_stats(
     client: OpenSearch = Depends(get_opensearch_client),
-) -> Dict[str, Any]:
+) -> StatsResponse:
     """
     Get index statistics and aggregations.
     """
@@ -61,20 +62,20 @@ def get_stats(
             },
         )
 
-        return {
-            "total_documents": count_result["count"],
-            "sources": [
-                {"name": b["key"], "count": b["doc_count"]}
+        return StatsResponse(
+            total_documents=count_result["count"],
+            sources=[
+                BucketInfo(name=b["key"], count=b["doc_count"])
                 for b in agg_results["aggregations"]["sources"]["buckets"]
             ],
-            "domains": [
-                {"name": b["key"], "count": b["doc_count"]}
+            domains=[
+                BucketInfo(name=b["key"], count=b["doc_count"])
                 for b in agg_results["aggregations"]["domains"]["buckets"]
             ],
-            "status": [
-                {"name": b["key"], "count": b["doc_count"]}
+            status=[
+                BucketInfo(name=b["key"], count=b["doc_count"])
                 for b in agg_results["aggregations"]["status"]["buckets"]
             ],
-        }
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
