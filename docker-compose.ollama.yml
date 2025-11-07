@@ -1,0 +1,85 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: govsearch-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      # Persist model downloads
+      - ollama_data:/root/.ollama
+    environment:
+      # Optional: Configure Ollama settings
+      - OLLAMA_HOST=0.0.0.0
+      # Default model (can be overridden in .env)
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama2}
+    restart: unless-stopped
+    # Uncomment below if you have NVIDIA GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    healthcheck:
+      test: [ "CMD", "ollama", "list" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - govsearch-network
+
+  # Helper service to automatically pull the model on first run
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: govsearch-ollama-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama2}
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        echo "Checking if model $${OLLAMA_MODEL} is available..."
+        if ollama list | grep -q "$${OLLAMA_MODEL}"; then
+          echo "Model $${OLLAMA_MODEL} already exists"
+        else
+          echo "Pulling model $${OLLAMA_MODEL}..."
+          ollama pull $${OLLAMA_MODEL}
+          echo "Model $${OLLAMA_MODEL} pulled successfully"
+        fi
+        echo "Ollama setup complete!"
+    networks:
+      - govsearch-network
+    restart: "no"
+
+  # Optional: Ollama Web UI for easier model management
+  ollama-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: govsearch-ollama-webui
+    ports:
+      - "3000:8080"
+    volumes:
+      - ollama_webui_data:/app/backend/data
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    networks:
+      - govsearch-network
+    profiles:
+      - webui # Only start with: docker compose --profile webui up
+
+volumes:
+  ollama_data:
+    driver: local
+  ollama_webui_data:
+    driver: local
+
+networks:
+  govsearch-network:
+    driver: bridge

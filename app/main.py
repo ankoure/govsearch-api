@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import aggregations, documents, health, search
+from app.api.routes import aggregations, documents, health, llm, search
 from app.core.config import settings
 
 
@@ -35,6 +35,7 @@ def create_app() -> FastAPI:
     app.include_router(search.router)
     app.include_router(aggregations.router)
     app.include_router(documents.router)
+    app.include_router(llm.router)
 
     return app
 

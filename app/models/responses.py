@@ -61,3 +61,54 @@ class StatsResponse(BaseModel):
     sources: List[BucketInfo]
     domains: List[BucketInfo]
     status: List[BucketInfo]
+
+
+class LLMAvailabilityResponse(BaseModel):
+    """LLM service availability status."""
+    available: bool
+    model: Optional[str] = None
+    host: Optional[str] = None
+
+
+class SummarizeRequest(BaseModel):
+    """Request to summarize search results."""
+    query: str
+    max_results: int = 5
+
+
+class SummarizeResponse(BaseModel):
+    """Response from summarization."""
+    query: str
+    summary: str
+    sources_used: int
+    sources: List[SearchResult]
+
+
+class AnswerRequest(BaseModel):
+    """Request to answer a question using RAG."""
+    question: str
+    max_results: int = 5
+    source_filter: Optional[str] = None
+
+
+class AnswerResponse(BaseModel):
+    """Response from question answering."""
+    question: str
+    answer: str
+    sources: List[SearchResult]
+    confidence: str
+
+
+class ChatRequest(BaseModel):
+    """Request for chat with context."""
+    message: str
+    context_query: Optional[str] = None
+    max_context_results: int = 3
+
+
+class ChatResponse(BaseModel):
+    """Response from chat."""
+    message: str
+    response: str
+    context_used: bool
+    sources: Optional[List[SearchResult]] = None

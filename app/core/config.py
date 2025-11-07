@@ -44,5 +44,13 @@ class Settings(BaseSettings):
     default_chunks_to_return: int = 3
     knn_k: int = 5
 
+    # Ollama LLM Settings
+    ollama_enabled: bool = False
+    ollama_host: str = "http://localhost:11434"
+    ollama_model: str = "llama2"
+    ollama_timeout: int = 120
+    ollama_context_window: int = 4096
+    ollama_max_chunks_for_context: int = 5
+
 
 settings = Settings()

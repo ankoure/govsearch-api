@@ -5,6 +5,7 @@ from typing import Generator
 from opensearchpy import OpenSearch
 
 from app.core.config import settings
+from app.services.ollama import OllamaService, ollama_service
 from app.services.search import SearchService
 
 # Global OpenSearch client
@@ -37,3 +38,13 @@ def get_search_service() -> Generator[SearchService, None, None]:
     """
     client = get_opensearch_client()
     yield SearchService(client)
+
+
+def get_ollama_service() -> OllamaService:
+    """
+    Get Ollama service singleton.
+
+    Returns:
+        OllamaService instance
+    """
+    return ollama_service

@@ -1,6 +1,5 @@
 """Aggregation endpoints for statistics and sources."""
 
-from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
